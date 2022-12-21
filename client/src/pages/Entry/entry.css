@@ -1,0 +1,30 @@
+.entry_main {
+  font-family: 'Bilbo';
+  text-align: center;
+  margin: 70px 0;
+  display: flex;
+  justify-content: center;
+}
+
+@media only screen and (max-width: 420px) and (min-width: 376px) {
+  .entry_main {
+    margin: 160px 0;
+  }
+}
+
+.entry_sub {
+  font-size: 36px;
+  line-height: 45px;
+}
+
+.entry_text {
+  font-size: 96px;
+  line-height: 120px;
+}
+
+.entry_section {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  font-size: 14px;
+}

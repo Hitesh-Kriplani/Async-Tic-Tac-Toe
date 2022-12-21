@@ -1,0 +1,16 @@
+.home_main {
+  font-family: 'Bilbo';
+  text-align: center;
+  margin: 160px 0;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  font-weight: 400;
+  color: #000000;
+}
+
+.home_text {
+  font-size: 64px;
+  line-height: 80px;
+  margin-bottom: 25px;
+}
