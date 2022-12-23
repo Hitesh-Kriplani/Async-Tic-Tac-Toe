@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Input, Label } from './styles';
 
-const InputField = ({ label, name, type, placeholder }) => {
-  const [value, setValue] = useState('');
-  const handleInput = (e) => {
-    setValue(e.target.value);
+const InputField = ({ label, name, type, placeholder, data, setData }) => {
+  const handleInput = ({ currentTarget: input }) => {
+    setData(input.value);
   };
   return (
     <div>
@@ -15,7 +14,7 @@ const InputField = ({ label, name, type, placeholder }) => {
         id={name}
         name={name}
         placeholder={placeholder}
-        value={value}
+        value={data}
         onInput={handleInput}
         required
       />

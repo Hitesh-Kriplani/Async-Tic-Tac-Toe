@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../../components/BackButton';
 import InputField from '../../components/InputField';
@@ -8,19 +8,44 @@ import {
   ContentWrapper,
   Heading,
   SubHeading,
+  LoadingSpinner,
 } from '../../components/styles';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { auth, database } from '../../services/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { ref, set } from 'firebase/database';
 const Register = () => {
   const navigate = useNavigate();
-  const handleRegister = (e) => {
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const handleRegister = async (e) => {
     e.preventDefault();
-    console.log(e.target.name.value);
-    console.log(e.target.username.value);
-    console.log(e.target.email.value);
-    console.log(e.target.password.value);
-    toast.success('Congratulations! Account Created.');
-    navigate('/login');
+    setLoading(true);
+    try {
+      const user = await createUserWithEmailAndPassword(auth, email, password);
+
+      updateProfile(auth.currentUser, {
+        displayName: name,
+        username: username,
+      });
+
+      set(ref(database, `/users/${username}`), {
+        displayName: name,
+        username: username,
+        email: email,
+        password: password,
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error(error);
+      alert('Error creating user account: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className='content'>
@@ -38,28 +63,40 @@ const Register = () => {
               name='name'
               type='text'
               placeholder='Type your name here'
+              data={name}
+              setData={setName}
             />
             <InputField
               label='Username'
               name='username'
               type='text'
               placeholder='Type your username here'
+              data={username}
+              setData={setUsername}
             />
             <InputField
               label='Email'
               name='email'
               type='email'
               placeholder='Type your email here'
+              data={email}
+              setData={setEmail}
             />
             <InputField
               label='Password'
               name='password'
               type='password'
               placeholder='Type your password here'
+              data={password}
+              setData={setPassword}
             />
-            <Button type='submit' style={{ marginTop: '27px' }}>
-              Register
-            </Button>
+            {loading ? (
+              <LoadingSpinner />
+            ) : (
+              <Button type='submit' style={{ marginTop: '27px' }}>
+                Register
+              </Button>
+            )}
           </form>
           <ToastContainer
             position='bottom-center'

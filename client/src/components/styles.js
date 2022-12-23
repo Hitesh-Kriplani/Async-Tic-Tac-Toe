@@ -140,3 +140,6 @@ export const PlayArea = styled.div`
   gap: 6px;
   grid-template-columns: auto auto auto;
 `;
+export const LoadingSpinner = () => {
+  return <div>LoadingSpinner</div>;
+};

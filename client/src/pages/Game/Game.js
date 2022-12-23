@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BackButton from '../../components/BackButton';
 import {
   Board,
@@ -10,31 +11,48 @@ import {
   Heading,
   PlayArea,
 } from '../../components/styles';
-
-const Game = () => {
+import { auth, database } from '../../services/firebase';
+const Game = ({ match }) => {
   const initialBoard = [
     [null, null, null],
     [null, null, null],
     [null, null, null],
   ];
   const [board, setBoard] = useState(initialBoard);
-  const [turn, setTurn] = useState('X');
+  const [currentPlayer, setCurrentPlayer] = useState('X');
   const [winner, setWinner] = useState(null);
   const [freeze, setFreeze] = useState(false);
+  const [game, setGame] = useState({});
+  const gameId = match.params.id;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) {
+      navigate('/login');
+    }
+    if (user) {
+      try {
+        database.ref(`/games/${user.uid}/${gameId}`).on('value', (snapshot) => {
+          const game = snapshot.val();
+          setGame(game);
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error(error);
+        // You can display an error message to the user here
+      }
+    }
+  }, [gameId]);
 
   const updateStates = (rowNum, cellNum) => {
     if (!freeze && !board[rowNum][cellNum]) {
-      board[rowNum][cellNum] = turn;
+      const newBoard = [...board];
+      board[rowNum][cellNum] = currentPlayer;
       setBoard((prev) => [...prev]);
-      setTurn(turn === 'X' ? 'O' : 'X');
+      setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
     }
-  };
-
-  const resetBoard = () => {
-    setBoard(initialBoard);
-    setTurn('X');
-    setFreeze(false);
-    setWinner(null);
   };
 
   useEffect(() => {
@@ -44,6 +62,31 @@ const Game = () => {
       setWinner(winner);
     }
   }, [board]);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  const handleSubmit = () => {
+    setLoading(true);
+    const user = auth.currentUser;
+    if (!user) {
+      setError('You must be logged in to submit the game');
+      setLoading(false);
+      return;
+    }
+    database
+      .ref(`/games/${user.uid}/${gameId}`)
+      .set({
+        status: winner === 'X' ? 'X wins' : 'O wins',
+        timestamp: Date.now(),
+      })
+      .then(() => {
+        setLoading(false);
+      })
+      .catch((error) => {
+        setError(error.message);
+        setLoading(false);
+      });
+  };
 
   return (
     <div className='content'>
@@ -56,15 +99,13 @@ const Game = () => {
             style={{
               width: '64px',
               height: '64px',
-              border: '1px solid black',
               marginTop: '8px',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              fontSize: '48px',
             }}
           >
-            {turn}
+            <img src={require('../../assets/X.png')} alt='X' />
           </div>
           <Board>
             <Header>Your Move</Header>
@@ -84,7 +125,7 @@ const Game = () => {
               })}
             </PlayArea>
           </Board>
-          <Button onClick={() => resetBoard()} style={{ marginBottom: '16px' }}>
+          <Button onClick={handleSubmit} style={{ marginBottom: '16px' }}>
             Submit
           </Button>
         </ContentBox>
@@ -97,18 +138,22 @@ const Slot = ({ rowNum, cellNum, updateStates, board }) => {
   const handleClick = (e) => {
     updateStates(rowNum, cellNum);
   };
+  const item = board[rowNum][cellNum];
   return (
     <div
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 1)',
+        backgroundColor: '#fff',
         height: '100px',
+        width: '121px',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 0,
+        margin: 0,
       }}
       onClick={handleClick}
     >
-      {board[rowNum][cellNum]}
+      {item && <img src={require(`../../assets/${item}.png`)} alt={item} />}
     </div>
   );
 };
